@@ -2,7 +2,7 @@
 
 # Source: https://kubernetes.io/docs/reference/setup-tools/kubeadm
 
-KUBE_VERSION=1.33.2
+KUBE_VERSION=1.33
 
 set -e
 
