@@ -131,6 +131,25 @@ sudo -i
 bash <(curl -s https://raw.githubusercontent.com/soumosarkar297/kubernetes-security-guide/main/cluster-setup/scripts/install_worker.sh)
 
 # run the printed kubeadm-join-command from the master on the worker
+kubeadm join <cks-master_Internal-IP>:6443 --token xxxx.xxxx --discovery-token-ca-cert-hash sha256:xxxx
 ```
+
+> [!Note]
+> Instead of Docker, we installed **containerd** as container runtime which implements the **CRI** which is a requirement to work with Kubernetes.
+>
+> Use `crictl ps` for containerd
+
+### Make Cluster accessible from outside
+
+From your local terminal, run the following:
+
+```bash
+gcloud compute firewall-rules create nodeports --allow tcp:30000-40000
+```
+
+We will make use of it later.
+
+> [!Important]
+> Stop your instances when you are not doing practical. To save your free credits.
 
 ---
