@@ -1,4 +1,6 @@
-# Kubernetes Security Specialist (CKS)
+# Kubernetes Security Specialist (CKS) – Study Guide
+
+A comprehensive study guide and practical resource for the **Certified Kubernetes Security Specialist (CKS)** exam. This repository covers essential K8s security concepts, best practices, and hands-on labs to help you master Kubernetes security fundamentals and pass the CKS certification.
 
 ## K8s Security Best Practices
 
