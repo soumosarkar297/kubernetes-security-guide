@@ -128,7 +128,7 @@ Similar way, SSH into `cks-worker`:
 
 ```bash
 sudo -i
-bash <(curl -s https://raw.githubusercontent.com/soumosarkar297/kubernetes-security-guide/master/cluster-setup/scripts/install_worker.sh)
+bash <(curl -s https://raw.githubusercontent.com/soumosarkar297/kubernetes-security-guide/main/cluster-setup/scripts/install_worker.sh)
 
 # run the printed kubeadm-join-command from the master on the worker
 ```
