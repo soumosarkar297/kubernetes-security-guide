@@ -153,3 +153,34 @@ We will make use of it later.
 > Stop your instances when you are not doing practical. To save your free credits.
 
 ---
+
+## Container Isolation in action
+
+> ![Note]
+> You must be familiar with Kubernetes architecture and basic components. For basic introduction, you can should check out [Foundation.md](./Foundation.md)
+
+### Create two containers and check if they can see each other
+
+```bash
+podman run --name c1 -d ubuntu sh -c 'sleep 1d'
+podman exec c1 ps aux
+
+podman run --name c2 -d ubuntu sh -c 'sleep 999d'
+podman exec c2 ps aux
+
+ps aux | grep sleep
+```
+
+Then create two container in the same namespace
+
+```bash
+podman rm c2 --force
+
+# Run the c2 in the PID namespace as c1
+podman run --name c2 --pid=container:c1 -d ubuntu sh -c 'sleep 999d'
+
+podman exec c2 ps aux
+podman exec c1 ps aux
+```
+
+---
