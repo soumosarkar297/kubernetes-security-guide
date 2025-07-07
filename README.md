@@ -151,12 +151,14 @@ We will make use of it later.
 
 > [!Important]
 > Stop your instances when you are not doing practical. To save your free credits.
+>
+> Also you can Reset your cluster after every section, as each new section works with a fresh cluster environment.
 
 ---
 
 ## Container Isolation in action
 
-> ![Note]
+> [!Note]
 > You must be familiar with Kubernetes architecture and basic components. For basic introduction, you can should check out [Foundation.md](./Foundation.md)
 
 ### Create two containers and check if they can see each other
