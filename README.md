@@ -186,3 +186,149 @@ podman exec c1 ps aux
 ```
 
 ---
+
+## Network Policies
+
+- Firewall Rules in Kubernetes
+- Implemented by the **Network Plugins CNI** (Calico / Weave)
+- Namespace level
+- Restrict the ingress and/or Egress for a group of Pods based on certain rules and conditions
+
+### Without NetworkPolicies
+
+- By default every pod can access every pod
+- Pods are NOT isolated
+
+### Example Visualization of NetworkPolicies
+
+![Egress NetworkPolicies](./diagram/network-policies_egress.png)
+![Ingress NetworkPolicies](./diagram/network-policies_ingress.png)
+![Namespace NetworkPolicies](./diagram/network-policies_namespace.png)
+![IpBlock NetworkPolicies](./diagram/network-policies_ipBlock.png)
+
+### Example of `yaml` Declarative Configurations of NetworkPolicy
+
+```yaml
+kind: NetworkPolicy
+metadata:
+  name: example
+  namespace: default
+spec:
+  podSelector:
+    matchLabels:
+      id: frontend
+  policyTypes:
+  - Egress
+```
+
+The above example is a valid Network policy which:
+
+- **denies** all outgoing traffic
+- from pods with label id=frontend
+- in namespace default
+
+```yaml
+kind: NetworkPolicy
+metadata:
+  name: example
+  namespace: default
+spec:
+  podSelector:
+    matchLabels:
+      id: frontend  # will be applied to these pods
+  policyTypes:
+  - Egress  # will be about outgoing traffic
+  egress:
+  - to:
+  # allow outgoing traffic to namespace with label id=ns1 AND port 80
+    - namespaceSelector:
+        matchLabels:
+          id: ns1
+    ports:
+    - protocol: TCP
+      port: 80
+  - to:
+  # allow outgoing traffic to pods with label id=backend in same namespace (default)
+    - podSelector:
+        matchLabels:
+          id: backend
+```
+
+In the above example two egress rules are connected with "OR".
+
+### Multiple NetworkPolicies
+
+- Possible to have multiple NPs selecting the same pods
+- If a pod has more than one NP
+  - then the union of all NPs is applied
+  - order doesn't affect policy result
+
+### Default Deny NetworkPolicy
+
+We'll create a very simple scenario with one frontend pod and one backend pod, and we'll check the connectivity between each pod before and after of creating our NetworkPolicy.
+
+```bash
+kubectl run frontend --image=nginx:alpine
+kubectl run backend --image=nginx:alpine
+
+kubectl expose pod frontend --port 80
+kubectl expose pod backend --port 80
+
+kubectl get pod,svc
+
+# Now check connectivity from frontend to backend, & vice versa
+kubectl exec frontend -- curl backend
+kubectl exec backend -- curl frontend
+
+# Now we'll create our network policy
+vim default-deny.yaml
+kubectl -f default-deny.yaml create
+
+kubectl exec frontend -- curl backend
+kubectl exec backend -- curl frontend
+```
+
+Use the example [`default-deny.yaml`](./NetworkPolicy/default-deny.yaml) for practice.
+
+### Allow frontend pods to talk to backend pods
+
+-- based on `podSelectors`
+
+We will specifically allow frontend pod to connect to backend pod e.g., we'll create one network policy to allow outgoing traffic from frontend and one incoming traffic from frontend to backend.
+
+```bash
+vim frontend.yaml
+kubectl -f frontend.yaml create
+
+kubectl exec frontend -- curl backend
+
+vim backend.yaml
+kubectl -f backend.yaml create
+
+kubectl exec frontend -- curl backend
+# It will still not work
+```
+
+> [!Important]
+> Our **default-deny policy** even denies default DNS traffic (port 53), as we need DNS resolution for frontend to connect with backend.
+
+```bash
+kubectl get pod --show-labels -owide
+kubectl exec frontend -- curl <backend-IP>
+```
+
+![!Note]
+> If you would like to allow DNS resolution, you have to extend your default-deny policy where you would allow Egress to the port 53.
+>
+> You can check out [`allow-dns-resolution.yaml`](./NetworkPolicy/allow-dns-resolution.yaml)
+
+---
+
+## Author
+
+- [Soumo Sarkar](https://www.linkedin.com/in/soumo-sarkar/)
+
+## Reference
+
+- [Kubernetes Documentation](https://kubernetes.io/docs/home/)
+- [Kubernetes CKS Full Course by @KillerShell](https://www.youtube.com/watch?v=d9xfB5qaOfg)
