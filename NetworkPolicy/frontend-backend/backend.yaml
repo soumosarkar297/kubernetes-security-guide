@@ -8,9 +8,9 @@ spec:
     matchLabels:
       run: backend
   policyTypes:
-  - Ingress
+    - Ingress
   ingress:
-  - from:
-    - podSelector:
-        matchLabels:
-          run: frontend
+    - from:
+      - podSelector:
+          matchLabels:
+            run: frontend

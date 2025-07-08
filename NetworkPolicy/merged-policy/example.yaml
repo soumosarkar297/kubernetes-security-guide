@@ -9,14 +9,14 @@ spec:
   policyTypes:
   - Egress
   egress:
-  - to:
-    - namespaceSelector:
-        matchLabels:
-          id: ns1
-    ports:
-    - protocol: TCP
-      port: 80
-  - to:
-    - podSelector:
-        matchLabels:
-          id: backend
+    - to:
+      - namespaceSelector:
+          matchLabels:
+            id: ns1
+      ports:
+      - protocol: TCP
+        port: 80
+    - to:
+      - podSelector:
+          matchLabels:
+            id: backend

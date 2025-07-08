@@ -12,6 +12,6 @@ spec:
     - Egress
   egress:
     - to:
-        - podSelector:
-            matchLabels:
-              run: backend
+      - podSelector:
+          matchLabels:
+            run: backend

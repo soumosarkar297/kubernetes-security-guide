@@ -7,9 +7,9 @@ spec:
     matchLabels:
       id: frontend
   policyTypes:
-  - Egress
+    - Egress
   egress:
-  - to:
-    - podSelector:
-        matchLabels:
-          id: backend
+    - to:
+      - podSelector:
+          matchLabels:
+            id: backend

@@ -7,12 +7,12 @@ spec:
     matchLabels:
       id: frontend
   policyTypes:
-  - Egress
+    - Egress
   egress:
-  - to:
-    - namespaceSelector:
-        matchLabels:
-          id: ns1
-    ports:
-    - protocol: TCP
-      port: 80
+    - to:
+      - namespaceSelector:
+          matchLabels:
+            id: ns1
+      ports:
+      - protocol: TCP
+        port: 80
