@@ -433,7 +433,7 @@ kubectl get ns
 kubectl -n kubernetes-dashboard get pod,svc
 ```
 
-### Make Dashboard Available Externally on HTTP
+### Make Dashboard Available Externally on HTTP (or insecure HTTPS)
 
 > [!Important]
 > Don't do this in production!
@@ -445,16 +445,39 @@ kubectl -n kubernetes-dashboard get pod,deploy,svc
 
 kubectl -n kubernetes-dashboard edit deploy kubernetes-dashboard-api
 # add --insecure-port=8000 to `spec.template.spec.containers.args`
+# also add --disable-csrf-protection
 
-kubectl -n kubernetes-dashboard edit svc kubernetes-dashboard-web
+kubectl -n kubernetes-dashboard edit svc kubernetes-dashboard-kong-proxy
 # Change type to "NodePort"
 
 kubectl -n kubernetes-dashboard get svc
 ```
 
-> Try to access the Kubernetes Dashboard on: `http://<worker-node_External-IP>:<web-NodePort>`
+Try to access the Kubernetes Dashboard on: `https://<worker-node_External-IP>:<kong-proxy-NodePort>`
 
-It will ask for Bearer Token, most probably it won't work like this!
+Generate the token with:
+
+```bash
+kubectl -n kubernetes-dashboard create token kubernetes-dashboard-kong
+```
+
+> [!Important]
+> Most probably you will only be able to access with insecure `https`, no longer with `http`. But still it is unsafe.
+
+### Give more permission to kubernetes-dashboard ServiceAccount
+
+```bash
+kubectl -n kubernetes-dashboard get sa
+kubectl get clusterroles | grep view
+
+# Only the kubernetes-dashboard access
+k -n kubernetes-dashboard create rolebinding insecure --serviceaccount kubernetes-dashboard:kubernetes-dashboard-kong --clusterrole view -oyaml --dry-run=client
+
+# Cluster wise access
+k -n kubernetes-dashboard create clusterrolebinding insecure --serviceaccount kubernetes-dashboard:kubernetes-dashboard-kong --clusterrole view -oyaml --dry-run=client
+```
+
+Explore more about it, and check out the updated [Kubernetes Dashboard Docs](https://github.com/kubernetes/dashboard/tree/master/docs)
 
 ---
 
