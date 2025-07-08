@@ -1,0 +1,15 @@
+kind: NetworkPolicy
+metadata:
+  name: example2b
+  namespace: default
+spec:
+  podSelector:
+    matchLabels:
+      id: frontend
+  policyTypes:
+  - Egress
+  egress:
+  - to:
+    - podSelector:
+        matchLabels:
+          id: backend

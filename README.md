@@ -263,6 +263,8 @@ In the above example two egress rules are connected with "OR".
   - then the union of all NPs is applied
   - order doesn't affect policy result
 
+You can check out the [`example.yaml`](./NetworkPolicy/merged-policy/example.yaml) which is being a merged-policy of [`example2a.yaml`](./NetworkPolicy/merged-policy/example2a.yaml) and [`example2b.yaml`](./NetworkPolicy/merged-policy/example2b.yaml)
+
 ### Default Deny NetworkPolicy
 
 We'll create a very simple scenario with one frontend pod and one backend pod, and we'll check the connectivity between each pod before and after of creating our NetworkPolicy.
@@ -288,7 +290,7 @@ kubectl exec frontend -- curl backend
 kubectl exec backend -- curl frontend
 ```
 
-Use the example [`default-deny.yaml`](./NetworkPolicy/default-deny.yaml) for practice.
+Use the example [`default-deny.yaml`](./NetworkPolicy/default-deny/default-deny.yaml) for practice.
 
 ### Allow frontend pods to talk to backend pods
 
@@ -317,10 +319,69 @@ kubectl get pod --show-labels -owide
 kubectl exec frontend -- curl <backend-IP>
 ```
 
-![!Note]
+> [!Note]
 > If you would like to allow DNS resolution, you have to extend your default-deny policy where you would allow Egress to the port 53.
 >
-> You can check out [`allow-dns-resolution.yaml`](./NetworkPolicy/allow-dns-resolution.yaml)
+> You can check out [`allow-dns-resolution.yaml`](./NetworkPolicy/default-deny/allow-dns-resolution.yaml)
+
+### Allow backend pods to talk to database pods
+
+-- based on `namespaceSelectors`
+
+#### pod-frontend → pod-backend → pod-cassandra
+
+```bash
+kubectl create ns cassandra
+
+# Add "ns: cassandra" labels
+kubectl edit ns cassandra
+# OR
+kubectl label namespace cassandra ns=cassandra
+
+kubectl -n cassandra run cassandra --image=nginx:alpine
+kubectl -n cassandra get pod -owide
+
+kubectl exec backend -- curl <cassandra-IP>
+```
+
+Now we'll allow backend pods to have egress traffic the namespace `cassandra`, where our database pod is running.
+
+```bash
+vim backend.yaml # edit to add Egress policy
+kubectl -f backend.yaml apply
+
+vim cassandra-deny.yaml
+kubectl -f backend.yaml create
+
+vim cassandra.yaml
+kubectl -f cassandra.yaml create
+
+kubectl exec backend -- curl <cassandra-IP>
+# FAILS! Try to debug yourself :)
+```
+
+> [!Note]
+> In previous step, we didn't modified `default` namespace to add labels "ns: default"
+
+```bash
+kubectl edit ns default
+
+# Now try
+kubectl exec backend -- curl <cassandra-IP>
+
+# You can also allow DNS traffic in cassandra namespace
+vim cassandra-deny.yaml
+kubectl -f cassandra-deny.yaml apply # Add egress to port 53 (TCP & UDP)
+
+# Expose cassandra as a service
+kubectl -n cassandra expose pod cassandra --port 80
+kubectl exec backend -- curl cassandra.cassandra
+```
+
+### Extend restriction between backend & cassandra
+
+- based on additional pod label
+- and additional port
 
 ---
 
