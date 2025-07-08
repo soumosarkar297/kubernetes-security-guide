@@ -387,6 +387,77 @@ You can check extended [`cassandra.yaml`](./NetworkPolicy/extended-restrictions/
 
 ---
 
+## GUI Elements and the Dashboard
+
+- only expose sevices externally if needed
+- cluster internal services/dashboards can also be accessed using kubectl port-forward
+
+### Tesla Hack 2018
+
+- Kubernetes Dashboard **had too many privileges** on the cluster
+  - without RBAC or too broad roles
+- Kubernetes Dashboard was **exposed to the internet**
+  - which is isn't by default
+
+### Kubectl proxy
+
+- Creates a proxy server between localhost and the Kubernetes API Server
+- uses connection as configured in the kubeconfig
+- allows to access API locally just over http and without authentication
+
+![kubectl-proxy](./diagram/kubectl-proxy.png)
+
+### Kubectl port-forward
+
+- forwards connections from a localhost-port to a pod-port
+- more generic than kubectl proxy
+- can be used for all TCP traffic not just HTTP
+
+![kubectl port-forward](./diagram/kubectl_port-forward.png)
+
+> [!Note]
+> If you have dashboard and you want to expose it externally without using `kubectl`, you should have some precautions. You could do it for example: with an Ingress (Nginx Ingress) and URL of your custom domain. Then you have to implement some authentication.
+
+### Install & Access the Kubernetes Dashboard
+
+Refer to the Official [Kubernetes Dashboard GitHub Repo](https://github.com/kubernetes/dashboard)
+
+> [!Important]
+> You have to install Helm first to install latest kubernetes-dashboard (v7+). Refer to Official [Helm Docs for installation](https://helm.sh/docs/intro/install/).
+
+```bash
+helm repo add kubernetes-dashboard https://kubernetes.github.io/dashboard/
+helm upgrade --install kubernetes-dashboard kubernetes-dashboard/kubernetes-dashboard --create-namespace --namespace kubernetes-dashboard
+
+kubectl get ns
+kubectl -n kubernetes-dashboard get pod,svc
+```
+
+### Make Dashboard Available Externally on HTTP
+
+> [!Important]
+> Don't do this in production!
+
+Check out [Dashboard Arguments docs](https://github.com/kubernetes/dashboard/blob/master/docs/common/arguments.md) in official [kubernetes/dashboard repo](https://github.com/kubernetes/dashboard)
+
+```bash
+kubectl -n kubernetes-dashboard get pod,deploy,svc
+
+kubectl -n kubernetes-dashboard edit deploy kubernetes-dashboard-api
+# add --insecure-port=8000 to `spec.template.spec.containers.args`
+
+kubectl -n kubernetes-dashboard edit svc kubernetes-dashboard-web
+# Change type to "NodePort"
+
+kubectl -n kubernetes-dashboard get svc
+```
+
+> Try to access the Kubernetes Dashboard on: `http://<worker-node_External-IP>:<web-NodePort>`
+
+It will ask for Bearer Token, most probably it won't work like this!
+
+---
+
 ## Author
 
 - [Soumo Sarkar](https://www.linkedin.com/in/soumo-sarkar/)
