@@ -383,6 +383,8 @@ kubectl exec backend -- curl cassandra.cassandra
 - based on additional pod label
 - and additional port
 
+You can check extended [`cassandra.yaml`](./NetworkPolicy/extended-restrictions/cassandra.yaml)
+
 ---
 
 ## Author
