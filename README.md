@@ -478,13 +478,12 @@ curl https://34.28.6.202:30421/service1 -kv
 
 Becuse of Kubernetes Ingress Controller Fake Certificate
 
-> ![Note]
+> [!Note]
 > We are following the Official [Kubernetes Ingress Docs](https://kubernetes.io/docs/concepts/services-networking/ingress/#tls)
 
 #### Step 1: Greate our TLS Certificate & Key
 
 ```bash
-# generate cert & key
 openssl req -x509 -newkey rsa:4096 -keyout key.pem -out cert.pem -days 365 -nodes
 # Common Name: secure-ingress.com
 
