@@ -390,6 +390,142 @@ Explore more about it, and check out the updated [Kubernetes Dashboard Docs](htt
 
 ---
 
+## Ingress objects with Security Control
+
+### What is Ingress
+
+There are three main **services** in Kubernetes:
+
+- ClusterIP
+- NodePort
+- LoadBalancer
+
+**Ingress** is a collection of rules that define **how external users can access services within a cluster**, acting as a single entry point for traffic. An **Ingress Controller** is a component that *watches for these Ingress resource* and implements them, typically by managing a reverse proxy and load balancer within the cluster.
+
+### Setup an Ingress with Services
+
+> [!Important]
+> DELETE ALL your existing NetworkPolicies from previous sections.
+
+![Example Ingress](./diagram/example-ingress.png)
+
+#### Install Kubernetes Nginx Controller
+
+Refer to their Official [Installation Guide](https://kubernetes.github.io/ingress-nginx/deploy) for latest version of ingress controller or run the below command:
+
+```bash
+kubectl apply -f https://raw.githubusercontent.com/kubernetes/ingress-nginx/controller-v1.13.0/deploy/static/provider/cloud/deploy.yaml
+
+k get pod,svc,serviceaccounts -n ingress-nginx
+```
+
+Here, `service/ingress-nginx-controller` would probably be **LoadBalancer** type, but still you would have **NodePort** like this: `80:30277/TCP,443:30421/TCP`
+
+> [!Note]
+> You can change the service type of ingress-nginx-controller to **NodePort** specifically by doing: <br>
+> `kubectl -n ingress-nginx edit svc ingress-nginx-controller`
+
+#### Try to check HTTP connection Locally using NodePort
+
+```bash
+# From your local terminal
+# Change the NodePort accordingly
+curl http://<worker-node_ExternalIP>:30277
+```
+
+It should return "404 Not Found" Title
+
+#### Create the Ingress resource
+
+```bash
+vim ingress.yaml
+kubectl -f ingress.yaml create
+kubectl get ing
+```
+
+Check out the example [minimal-ingress.yaml](./Ingress/minimal-ingress.yaml) file.
+
+#### Create Pod and Services for Ingress
+
+```bash
+kubectl run pod1 --image=nginx:alpine
+kubectl run pod2 --image=nginx:alpine
+kubectl expose pod pod1 --port 80 --name service1
+kubectl expose pod pod2 --port 80 --name service2
+
+kubectl get pod,svc
+```
+
+Try to hit the endpoints:
+
+```bash
+curl http://34.28.6.202:30277/service1
+curl http://34.28.6.202:30277/service2
+```
+
+### Secure an Ingress with TLS
+
+Try to access with HTTPS NodePort of ingress-nginx-controller
+
+```bash
+curl https://34.28.6.202:30421/service1
+# Failed due to curl: (60) SSL certificate problem: self-signed certificate
+
+# But it works with:
+curl https://34.28.6.202:30421/service1 -k
+curl https://34.28.6.202:30421/service1 -kv
+```
+
+Becuse of Kubernetes Ingress Controller Fake Certificate
+
+> ![Note]
+> We are following the Official [Kubernetes Ingress Docs](https://kubernetes.io/docs/concepts/services-networking/ingress/#tls)
+
+#### Step 1: Greate our TLS Certificate & Key
+
+```bash
+# generate cert & key
+openssl req -x509 -newkey rsa:4096 -keyout key.pem -out cert.pem -days 365 -nodes
+# Common Name: secure-ingress.com
+
+ls # Check if key.pem & cert.pem is added
+```
+
+#### Step 2: Create a new TLS Secret for Ingress
+
+```bash
+kubectl create secret tls -h
+kubectl create secret tls <secret-name> --cert=path/to/cert.pem --key=path/to/key.pem
+
+kubectl get ing,secret
+```
+
+#### Step 3: Edit your `ingress.yaml` to add tls configuration
+
+Check out the [secure-ingress.yaml](./Ingress/secure-ingress.yaml) file for reference
+
+```bash
+vim ingress.yaml
+kubectl apply -f ingress.yaml
+```
+
+#### Step 4: Check the new endpoint locally using `curl`
+
+```bash
+# Will not work with:
+curl https://34.28.6.202:30421/service1 -k
+
+# Actually will work using the 'secure-ingress.com' as it set to be host
+curl https://secure-ingress.com:30421/service1 --resolve secure-ingress.com:30421:34.28.6.202 -k
+curl https://secure-ingress.com:30421/service1 --resolve secure-ingress.com:30421:34.28.6.202 -kv
+```
+
+#### Diagram of our TLS Secured Ingress
+
+![Secured Ingress](./diagram/tls-secured-ingress.png)
+
+---
+
 ## Author
 
 - [Soumo Sarkar](https://www.linkedin.com/in/soumo-sarkar/)
