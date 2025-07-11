@@ -528,6 +528,83 @@ curl https://secure-ingress.com:30421/service1 --resolve secure-ingress.com:3042
 
 ---
 
+## Protect Node Metadata and Endpoint
+
+When you run virtual machines on a cloud platform—*like AWS, Azure, or Google Cloud* – each virtual machine (or node) has access to something called a **metadata service**.
+
+This metadata service is basically an **internal endpoint** that only the virtual machine can reach. It provides important information about the VM itself—like its IP, its hostname, and more.
+
+### Cloud Platform Node Metadata
+
+- Metadata service API by default reachable from VMs
+- Can contain cloud credentials for VMs / Nodes
+- Can contain provisioning data like kubelet credentials
+
+#### Limit permissions for instance credentials
+
+- Ensure that cloud-instance-account has only the necessary permissions
+- Each cloud provider has a set of recommendations to follow
+- Not in the hands of Kubernetes
+
+### Access Sensitive Node Metadata
+
+By default the pods and its containers can contact the metadata service. So for attackers it's possible to contact the metadata service from a container (which is running as a process) and query sensitive informations.
+
+You can refer to Official Docs for the specific Cloud Provider metadata. In this case we are refering [Google Cloud VM metadata](https://cloud.google.com/compute/docs/metadata/querying-metadata)
+
+#### Access GCP metadata from Instance
+
+```bash
+# Access the metadata from any node
+curl "http://metadata.google.internal/computeMetadata/v1/instance/image" -H "Metadata-Flavor: Google"
+curl "http://metadata.google.internal/computeMetadata/v1/instance/disks/0/" -H "Metadata-Flavor: Google"
+```
+
+#### Access GCP metadata from a Pod
+
+```bash
+# Create a pod
+kubectl run nginx --image=nginx:alpine
+
+# Go inside the pod
+kubectl exec nginx -it -- sh
+# Then run the curl commands to access the metadata
+# and You can from a pod too!
+```
+
+### Restrict Access using NetworkPolicies
+
+![Retrict Access to Metadata Service](./diagram/metadata-service.png)
+
+We can allow certain pods or labels to access this metadata service and deny certain pods' access.
+
+> [!Note]
+> Check out [np_cloud_metadata_deny.yaml](./protect-node-metadata/np_cloud_metadata_deny.yaml) and [np_cloud_metadata_allow.yaml](./protect-node-metadata/np_cloud_metadata_allow.yaml) for reference.
+
+```bash
+vim deny-metadata.yaml
+kubectl create -f deny-metadata.yaml
+
+kubectl exec nginx -it -- sh
+# Then curl metadata.google.internal, it will not reach
+
+# Now create label specific allow for metadata service
+vim allow-metadata.yaml
+kubectl create -f allow-metadata.yaml
+
+# Add 'role=metadata-accessor' to the specific pod(s)
+kubectl label pod nginx role=metadata-accessor
+# OR
+kubectl edit pod nginx
+
+kubectl exec nginx -it -- sh
+# curl metadata.google.internal, it will reach because only label matches
+```
+
+> **Conclusion:** Only allow pods with certain label to access the metadata endpoint.
+
+---
+
 ## Author
 
 - [Soumo Sarkar](https://www.linkedin.com/in/soumo-sarkar/)
