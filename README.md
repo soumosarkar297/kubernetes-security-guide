@@ -506,6 +506,9 @@ Check out the [secure-ingress.yaml](./Ingress/secure-ingress.yaml) file for refe
 ```bash
 vim ingress.yaml
 kubectl apply -f ingress.yaml
+
+# OR
+k -n <NAMESPACE> edit ing <Ingress-Name>
 ```
 
 #### Step 4: Check the new endpoint locally using `curl`
