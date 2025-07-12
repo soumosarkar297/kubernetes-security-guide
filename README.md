@@ -605,6 +605,45 @@ kubectl exec nginx -it -- sh
 
 ---
 
+## CIS Benchmarks
+
+Use CIS benchmark to review security configuration
+
+### Overview of CIS (Center for Internet Secuirty)
+
+- Best practices and guidlines for the secure configuration of a target system, applications or services
+- Covering more than 18 technology groups
+- It is developed through unique consensus-based process comprised of cybersecurity professionals and subject matter experts around the world
+
+#### CIS Kubernetes Benchmark
+
+The CIS Kubernetes Benchmark specifically focuses on security recommendations for Kubernetes clusters. It covers areas like how to secure the Kubernetes control plane, worker nodes, and overall cluster configurations.
+
+We can use and apply these CIS Benchmark to our Default K8s Security Rules. Or you can customize the Cloud-managed Kubernetes solution.
+
+### CIS Benchmarks in action
+
+Download the latest [CIS Benchmark PDF](https://downloads.cisecurity.org/#/) from the official [cisecurity.org](https://www.cisecurity.org/benchmark/kubernetes)
+
+> [!Note]
+> We are going to follow: CIS_Kubernetes_Benchmark_v1.9.0 PDF (or you can check any latest version of it)
+
+- Check k8s version of your Document
+- Control Plane: page 16 rule 1.1.1
+- Worker Node: page 204 rule 4.2.10
+
+### kube-bench
+
+Refer to the Official [kube-bench GitHub Repo](https://github.com/aquasecurity/kube-bench)
+
+```bash
+podman run --pid=host -v /etc:/etc:ro -v /var:/var:ro -t docker.io/aquasec/kube-bench:latest --version 1.33
+```
+
+You can now check which security configuration PASS, FAIL or WARN according to your current config. Also you get Remediations for them to make the system more secure.
+
+---
+
 ## Author
 
 - [Soumo Sarkar](https://www.linkedin.com/in/soumo-sarkar/)
